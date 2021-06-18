@@ -7,6 +7,7 @@ typedef struct actions {
 } ACTION;
 
 typedef struct knobs {
+  PIN_NUM enc_id;
   PIN_NUM pin_A;
   PIN_NUM pin_B;
   PIN_NUM pin_DN;
@@ -25,10 +26,34 @@ typedef struct knobs {
 
 Metro updCtrl = Metro(1000/200); //200Hz
 
-int KNOB_COUNT = 1;
-KNOB knob_list[1] = {
+int KNOB_COUNT = 4;
+KNOB knob_list[4] = {
   {
-    0, 1, 2,
+    0, 4, 5, 6,
+    1,
+    {true, KEY_MEDIA_VOLUME_INC},
+    {true, KEY_MEDIA_VOLUME_DEC},
+    {true, KEY_MEDIA_MUTE},
+    0, 0, 0, 0, 0,
+  },
+  {
+    1, 4, 5, 6,
+    2,
+    {true, KEY_MEDIA_NEXT_TRACK},
+    {true, KEY_MEDIA_PREV_TRACK},
+    {true, KEY_MEDIA_PLAY_PAUSE},
+    0, 0, 0, 0, 0,
+  },
+  {
+    2, 4, 5, 6,
+    4,
+    {true, KEY_MEDIA_VOLUME_INC},
+    {true, KEY_MEDIA_VOLUME_DEC},
+    {true, KEY_MEDIA_MUTE},
+    0, 0, 0, 0, 0,
+  },
+  {
+    9, 4, 5, 6,
     1,
     {true, KEY_MEDIA_VOLUME_INC},
     {true, KEY_MEDIA_VOLUME_DEC},
@@ -40,9 +65,14 @@ KNOB knob_list[1] = {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(38400);
-  pinMode(0, INPUT_PULLUP);
-  pinMode(1, INPUT_PULLUP);
-  pinMode(2, INPUT_PULLUP);
+  pinMode(0, OUTPUT);
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  
+  pinMode(4, INPUT_PULLUP);
+  pinMode(5, INPUT_PULLUP);
+  pinMode(6, INPUT_PULLUP);
   Serial.println("Init OK");
 }
 
@@ -50,20 +80,35 @@ void setup() {
 
 void loop() {
   //Read encoders
+
   for (int i = 0; i < KNOB_COUNT; i++) {
     // TODO: pull down the right knobs (after decoder chip is wired in)
     // TODO: sleep a bit after knob is pulled down
+    select_enc(knob_list[i].enc_id);
+    //delay(1);
+    delayMicroseconds(100);
     track_knob(&knob_list[i]);
   }
+  select_enc(-1);
 
   // Only wake at 200 Hz
   if(updCtrl.check() == 0) {
     return;
   }
-
   // Handle the button
   for (int i = 0; i < KNOB_COUNT; i++) {
     service_knob(&knob_list[i]);
+  }
+  select_enc(-1);
+}
+
+void select_enc(int id) {
+  int dac_bits[4] = {0,1,2,3};
+  if (id < 0 || id > 9) {
+    id = 15;
+  }
+  for(int b = 0; b < 4; b++){
+    digitalWrite(dac_bits[b], id & 1 << b);
   }
 }
 
