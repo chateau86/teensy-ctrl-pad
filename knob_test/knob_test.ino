@@ -2,19 +2,30 @@
 typedef int PIN_NUM;
 
 typedef struct actions {
-  bool is_keyboard;
+  int action_type;
+  /*
+    0: nop
+    1: keyboard
+    2: joystick
+  */
   int action_code; // Button number or keycode
 } ACTION;
 
 typedef struct knobs {
+  
   PIN_NUM enc_id;
+
   PIN_NUM pin_A;
   PIN_NUM pin_B;
   PIN_NUM pin_DN;
+
   int knob_threshold_multiplier;
-  ACTION act_up;
+  bool knob_updown;
+
   ACTION act_down;
   ACTION act_push;
+  ACTION act_up;
+    
   //---internal states---
   int knob_pos_raw; // [0...3]
   int knob_pos;  // Reset this to zero when event is handled
@@ -26,65 +37,157 @@ typedef struct knobs {
 
 Metro updCtrl = Metro(1000/200); //200Hz
 
-int KNOB_COUNT = 4;
-KNOB knob_list[4] = {
+int KNOB_COUNT = 10;
+KNOB knob_list[10] = {
   {
-    0, 4, 5, 6,
-    1,
-    {true, KEY_MEDIA_VOLUME_INC},
-    {true, KEY_MEDIA_VOLUME_DEC},
-    {true, KEY_MEDIA_MUTE},
+    0,
+    18, 20, 19,
+    1, false,
+    {2, 1},
+    {2, 2},
+    {2, 3},
     0, 0, 0, 0, 0,
-  },
-  {
-    1, 4, 5, 6,
+  }, {
+    1,
+    18, 20, 19,
+    1, false,
+    {2, 4},
+    {2, 5},
+    {2, 6},
+    0, 0, 0, 0, 0,
+  }, {
     2,
-    {true, KEY_MEDIA_NEXT_TRACK},
-    {true, KEY_MEDIA_PREV_TRACK},
-    {true, KEY_MEDIA_PLAY_PAUSE},
+    18, 20, 19,
+    1, false,
+    {2, 7},
+    {2, 8},
+    {2, 9},
     0, 0, 0, 0, 0,
-  },
-  {
-    2, 4, 5, 6,
+  }, {
+    3,
+    18, 20, 19,
+    1, false,
+    {2, 10},
+    {2, 11},
+    {2, 12},
+    0, 0, 0, 0, 0,
+  }, {
     4,
-    {true, KEY_MEDIA_VOLUME_INC},
-    {true, KEY_MEDIA_VOLUME_DEC},
-    {true, KEY_MEDIA_MUTE},
+    18, 20, 19,
+    1, false,
+    {2, 13},
+    {2, 14},
+    {2, 15},
+    0, 0, 0, 0, 0,
+  }, {
+    5,
+    18, 20, 19,
+    1, false,
+    {2, 16},
+    {2, 17},
+    {2, 18},
+    0, 0, 0, 0, 0,
+  }, {
+    6,
+    18, 20, 19,
+    1, true,
+    {1, KEY_MEDIA_VOLUME_DEC},
+    {1, KEY_MEDIA_MUTE},
+    {1, KEY_MEDIA_VOLUME_INC},
+    0, 0, 0, 0, 0,
+  }, {
+    7,
+    18, 20, 19,
+    3, true,
+    {1, KEY_MEDIA_PREV_TRACK},
+    {1, KEY_MEDIA_PLAY_PAUSE},
+    {1, KEY_MEDIA_NEXT_TRACK},
+    0, 0, 0, 0, 0,
+  }, {
+    8,
+    18, 20, 19,
+    1, false,
+    {2, 19},
+    {2, 20},
+    {2, 21},
+    0, 0, 0, 0, 0,
+  }, {
+    9,
+    18, 20, 19,
+    1, false,
+    {2, 22},
+    {2, 23},
+    {2, 24},
     0, 0, 0, 0, 0,
   },
-  {
-    9, 4, 5, 6,
-    1,
-    {true, KEY_MEDIA_VOLUME_INC},
-    {true, KEY_MEDIA_VOLUME_DEC},
-    {true, KEY_MEDIA_MUTE},
-    0, 0, 0, 0, 0,
-  },
+};
+
+int BTN_ROW_COUNT = 3;
+int BTN_ROW_PIN_LIST[3] = {7, 8, 9};
+int BTN_COL_COUNT = 4;
+int BTN_COL_PIN_LIST[4] = {0, 1, 2, 3};
+
+int* BTN_STATUS = NULL;
+
+int JS_BTN_COUNT = 35;
+
+ACTION btn_actions[12] = {
+  {2, 32},
+  {2, 29},
+  {2, 31},
+  {2, 30},
+  {2, 34},
+  {2, 33},
+  {0, 106},
+  {0, 107},
+  {2, 28},
+  {2, 27},
+  {2, 26},
+  {2, 25},
 };
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(38400);
-  pinMode(0, OUTPUT);
-  pinMode(1, OUTPUT);
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  
-  pinMode(4, INPUT_PULLUP);
-  pinMode(5, INPUT_PULLUP);
-  pinMode(6, INPUT_PULLUP);
+
+  // Encoder select
+  pinMode(14, OUTPUT);
+  pinMode(15, OUTPUT);
+  pinMode(16, OUTPUT);
+  pinMode(17, OUTPUT);
+
+  // Encoder return
+  pinMode(18, INPUT_PULLUP);
+  pinMode(19, INPUT_PULLUP);
+  pinMode(20, INPUT_PULLUP);
+
+  // Btn select
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+  pinMode(9, OUTPUT);
+
+  // Btn return
+  pinMode(0, INPUT_PULLUP);
+  pinMode(1, INPUT_PULLUP);
+  pinMode(2, INPUT_PULLUP);
+  pinMode(3, INPUT_PULLUP);
+
+  BTN_STATUS = (int*) calloc(BTN_ROW_COUNT*BTN_COL_COUNT, sizeof(int));
+
+  Joystick.useManualSend(true);
+
   Serial.println("Init OK");
 }
-
 
 
 void loop() {
   //Read encoders
 
   for (int i = 0; i < KNOB_COUNT; i++) {
-    // TODO: pull down the right knobs (after decoder chip is wired in)
-    // TODO: sleep a bit after knob is pulled down
+    // pull down the right knobs (after decoder chip is wired in)
+
     select_enc(knob_list[i].enc_id);
+    // sleep a bit after knob is pulled down (just under ~100ns needed at 3.3v per decoder datasheet)
     //delay(1);
     delayMicroseconds(100);
     track_knob(&knob_list[i]);
@@ -95,15 +198,25 @@ void loop() {
   if(updCtrl.check() == 0) {
     return;
   }
-  // Handle the button
+  clear_js_buffer();
+  // Handle the knobs
   for (int i = 0; i < KNOB_COUNT; i++) {
     service_knob(&knob_list[i]);
   }
-  select_enc(-1);
+
+  // Handle the button
+  service_buttons();
+  Joystick.send_now();
+}
+
+void clear_js_buffer(){
+  for(int i = 0; i < JS_BTN_COUNT; i++){
+    Joystick.button(i, 0); 
+  }
 }
 
 void select_enc(int id) {
-  int dac_bits[4] = {0,1,2,3};
+  int dac_bits[4] = {17,16,15,14};
   if (id < 0 || id > 9) {
     id = 15;
   }
@@ -165,9 +278,39 @@ void service_knob(KNOB *knob) {
     perform_action(knob->act_down, 0);
     knob->knob_pos = 0;
   }
-  if (knob->btn_pos_raw != knob->btn_pos) {
-    perform_action(knob->act_push, knob->btn_pos_raw - knob->btn_pos);
-    knob->btn_pos = knob->btn_pos_raw;
+  if (knob->knob_updown) {
+    if (knob->btn_pos_raw != knob->btn_pos) {
+      perform_action(knob->act_push, knob->btn_pos_raw - knob->btn_pos);
+      knob->btn_pos = knob->btn_pos_raw;
+    }
+  } else {
+    if (knob->btn_pos_raw == 0) {
+      perform_action(knob->act_push, 0);
+    }
+  }
+}
+
+void service_buttons() {
+  for(int row = 0; row < BTN_ROW_COUNT; row++) {
+    select_btn_row(row);
+    delayMicroseconds(50);
+    for(int col = 0; col < BTN_COL_COUNT; col++){
+      if (digitalRead(BTN_COL_PIN_LIST[col]) == 0) {
+          int btn_id = row * BTN_COL_COUNT + col;
+          perform_action(btn_actions[btn_id], 0);
+      }
+    }
+  }
+  select_btn_row(-1);
+}
+
+void select_btn_row(int row) {
+  for(int i = 0; i < BTN_ROW_COUNT; i++){
+    if (row == i){
+      digitalWrite(BTN_ROW_PIN_LIST[i], 0);
+    } else {
+      digitalWrite(BTN_ROW_PIN_LIST[i], 1);
+    }
   }
 }
 
@@ -176,7 +319,12 @@ void perform_action(ACTION act, int state) {
   //   -1: Release
   //    0: Pulse
   //   +1: Push and hold
-  if (act.is_keyboard){
+  if (act.action_type == 0){
+    Serial.print("a: ");
+    Serial.print(act.action_code);
+    Serial.print(" st: ");
+    Serial.println(state);
+  }else if (act.action_type == 1){
     if (state == -1) {
       Keyboard.press(act.action_code);
       Serial.print("v");
@@ -189,8 +337,8 @@ void perform_action(ACTION act, int state) {
       Keyboard.release(act.action_code);
       Serial.print("v^");
     }
-  } else {
+  } else if (act.action_type == 2) {
     // Set joystick button
-    // TODO
+    Joystick.button(act.action_code, 1); 
   }
 }
