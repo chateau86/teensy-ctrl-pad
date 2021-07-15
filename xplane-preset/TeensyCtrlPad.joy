@@ -1,0 +1,89 @@
+I
+1100 Version
+JOY
+
+# http://lookup.x-plane.com/_lookup_11_/joy_file_spec.html
+
+OS: Windows
+
+Name: Serial/Keyboard/Joystick
+ID: VID:0x16c0PID:0x0498
+
+Assignments:
+--------------------------------------------------------------
+Axis 0: hidden
+Axis 1: hidden
+Axis 2: hidden
+Axis 3: hidden
+Axis 4: hidden
+Axis 5: hidden
+Axis 6: hidden
+Axis 7: hidden
+Axis 8: hidden
+Axis 9: hidden
+Axis 10: hidden
+Axis 11: hidden
+Axis 12: hidden
+Axis 13: hidden
+Axis 14: hidden
+Axis 15: hidden
+Axis 16: hidden
+Axis 17: hidden
+Axis 18: hidden
+Axis 19: hidden
+Axis 20: hidden
+Axis 21: hidden
+Axis 22: hidden
+
+
+# FORMAT FOR BUTTONS:
+# Button <button number>: hidden
+# Button <button number>: <command path, like "sim/operation/quit">
+#	See X-Plane/Resources/plugins/Commands.txt for a complete list of commands
+Button 1: sim/GPS/g430n1_fine_down
+Button 2: sim/GPS/g430n1_clr
+Button 3: sim/GPS/g430n1_fine_up
+Button 4: sim/GPS/g430n1_page_dn
+Button 5: sim/GPS/g430n1_ent
+Button 6: sim/GPS/g430n1_page_up
+Button 7: sim/GPS/g430n1_coarse_down
+Button 8: sim/GPS/g430n1_nav_com_tog
+Button 9: sim/GPS/g430n1_coarse_up
+Button 10: sim/GPS/g430n1_chapter_dn
+Button 11: sim/GPS/g430n1_cursor
+Button 12: sim/GPS/g430n1_chapter_up
+Button 13: sim/autopilot/altitude_down
+Button 14: sim/autopilot/altitude_hold
+Button 15: sim/autopilot/altitude_up
+Button 16: sim/autopilot/vertical_speed_down
+Button 17: sim/autopilot/vertical_speed_pre_sel
+Button 18: sim/autopilot/vertical_speed_uphidden
+Button 19: sim/none/none
+Button 20: sim/none/none
+Button 21: sim/none/none
+Button 22: sim/none/none
+Button 23: sim/none/none
+Button 24: sim/none/none
+Button 25: sim/VR/toggle_vr
+Button 26: sim/VR/quick_zoom_view
+Button 27: simcoders/rep/kneeboard/toggle
+Button 28: sim/VR/general/reset_view
+Button 29: sim/none/none
+Button 30: sim/none/none
+Button 31: sim/none/none
+Button 32: sim/none/none
+Button 33: sim/none/none
+Button 34: sim/none/none
+
+# FORMAT FOR HAT SWITCHES:
+# Hat Switch <hat switch number>: hidden
+# Hat Switch <hat switch number> Direction <hat switch direction>: <command path, like "sim/operation/quit">
+#	See X-Plane/Resources/plugins/Commands.txt for a complete list of commands
+Hat Switch 0 Direction 0: hidden
+Hat Switch 0 Direction 1: hidden
+Hat Switch 0 Direction 2: hidden
+Hat Switch 0 Direction 3: hidden
+Hat Switch 0 Direction 4: hidden
+Hat Switch 0 Direction 5: hidden
+Hat Switch 0 Direction 6: hidden
+Hat Switch 0 Direction 7: hidden
